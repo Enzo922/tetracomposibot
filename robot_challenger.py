@@ -24,29 +24,45 @@ class Robot_player(Robot):
         super().__init__(x_0, y_0, theta_0, name="Robot "+str(self.robot_id), team=self.team_name)
 
     def step(self, sensors, sensor_view=None, sensor_robot=None, sensor_team=None):
-        front = 0
-        front_left = 1
-        front_right = 7
-        #eviter les murs
+        sensor_front = 0
+        sensor_front_left = 1
+        sensor_left = 2
+        sensor_rear_left = 3
+        sensor_rear = 4
+        sensor_rear_right = 5
+        sensor_right = 6
+        sensor_front_right = 7
+    
         wall = [sensors[i] if sensor_view[i] == 1 else 1.0 for i in range(8)]
-        if min(wall[front], wall[front_left], wall[front_right]) < 0.85:
-            translation = 0.7 * wall[front]
-            rotation = 0.5 * (wall[front_left] - wall[front_right])
-            
-            if wall[front_left] < wall[front_right]:
-                rotation -= 0.5  # mur a gauche
-            else:
-                rotation += 0.5 #mur a droite
-            return translation, rotation, False
-
-        # eviter les autres robots de son equipe
         bot = [sensors[i] if sensor_view[i] == 2 and sensor_team[i] != self.team else 1.0 for i in range(8)]
-        if bot[front] < 1.0:
-            translation = (1.0 - bot[front]) * 0.7
-            rotation = 0.5 * (bot[front_right] - bot[front_left])
-            return translation, rotation, False
 
-        # tout droit
-        translation = 0.5
-        rotation = (random.random() - 0.5) * 0.1
+        # murs + bot
+        obstacles = [min(wall[i], bot[i]) for i in range(8)]
+
+        #calcul la meilleure reorientation
+        free_space = [1.0 - obstacles[i] for i in range(8)]
+        max_free_space = max(free_space)
+        best_direction = free_space.index(max_free_space)
+        
+        translation = 0.5 
+        if max_free_space < 0.5:
+            translation *= 0.5
+            
+        if best_direction == sensor_front:
+            rotation = 0.0
+        elif best_direction == sensor_front_left:
+            rotation = 0.5
+        elif best_direction == sensor_left:
+            rotation = 0.7
+        elif best_direction == sensor_rear_left:
+            rotation = 0.8
+        elif best_direction == sensor_rear:
+            rotation = 1.0
+        elif best_direction == sensor_rear_right:
+            rotation = -0.8
+        elif best_direction == sensor_right:
+            rotation = -0.7
+        elif best_direction == sensor_front_right:
+            rotation = -0.5
+
         return translation, rotation, False
