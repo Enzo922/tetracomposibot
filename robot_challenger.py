@@ -29,7 +29,7 @@ class Robot_player(Robot):
         front_right = 7
         #eviter les murs
         wall = [sensors[i] if sensor_view[i] == 1 else 1.0 for i in range(8)]
-        if wall[front] < 1.0:
+        if min(wall[front], wall[front_left], wall[front_right]) < 0.9:
             translation = 0.7 * wall[front]
             rotation = 0.5 * (wall[front_left] - wall[front_right])
             return translation, rotation, False
